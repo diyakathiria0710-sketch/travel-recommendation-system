@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wander - Smart Travel Planner & Admin Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght=700&family=Inter:wght=400;500;600;700;800&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .serif-heading {
+            font-family: 'Playfair Display', serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #5352ed 0%, #70a1ff 50%, #74b9ff 100%);
+        }
+        .app-bg {
+            background-color: #f1f2f6;
+        }
+        .vibrant-coral-bg {
+            background: linear-gradient(135deg, #5f5ce5 0%, #4d49e0 100%);
+        }
+        .vibrant-coral-bg:hover {
+            background: linear-gradient(135deg, #4d49e0 0%, #3b37c7 100%);
+        }
+        .vibrant-coral-text {
+            color: #5f5ce5;
+        }
+        .auth-input {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #2f3542;
+        }
+        .auth-input:focus {
+            border-color: #4d49e0;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(77, 73, 224, 0.2);
+        }
+        .auth-toggle-container {
+            background-color: #f1f2f6;
+        }
+        .dropdown-arrow::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 24px;
+            width: 12px;
+            height: 12px;
+            background-color: #262626;
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center font-sans transition-colors duration-300" id="body-canvas">
+
+    <div id="auth-page" class="min-h-screen flex items-center justify-center px-4 py-12 w-full">
+        <div class="bg-white shadow-2xl p-8 max-w-md w-full rounded-[2rem] border border-white/20 relative">
+            
+            <div id="logout-alert" class="hidden mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3.5 text-sm font-medium">
+                You have been logged out.
+            </div>
+            <div id="reg-success-alert" class="hidden mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-3.5 text-sm font-medium">
+                Registration successful! You can now log in.
+            </div>
+            <div id="error-alert" class="hidden mb-6 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-3.5 text-sm font-medium">
+                Invalid credentials. Please verify your info.
+            </div>
+
+            <div class="auth-toggle-container p-1 rounded-2xl flex justify-between items-center mb-8">
+                <button id="tab-login" onclick="switchAuthTab('login')" class="w-1/2 py-2.5 text-center font-bold text-sm rounded-xl transition duration-200 bg-white text-gray-950 shadow-sm">
+                    Login
+                </button>
+                <button id="tab-register" onclick="switchAuthTab('register')" class="w-1/2 py-2.5 text-center font-bold text-sm rounded-xl transition duration-200 text-gray-400 hover:text-gray-700">
+                    Register
+                </button>
+            </div>
+
+            <div id="view-login" class="">
+                <h1 class="serif-heading text-4xl text-gray-900 font-bold mb-2 tracking-tight">Welcome back</h1>
+                <p class="text-sm text-gray-500 mb-8 leading-relaxed">Use your credentials or use admin account to access panels.</p>
+                
+                <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-5">
+                    <div class="relative">
+                        <label class="block text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Email / Username</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400"><i class="fa-solid fa-envelope"></i></span>
+                            <input type="text" id="login-email" autocomplete="off" required placeholder="you@example.com or 'admin'" class="w-full pl-11 pr-4 py-3.5 rounded-xl auth-input focus:outline-none transition font-medium shadow-sm">
+                        </div>
+
+                        <div id="email-suggestions" class="hidden absolute left-0 right-0 z-50 mt-3 bg-[#262626] text-white rounded-2xl shadow-xl p-4 border border-neutral-800 dropdown-arrow">
+                            <div class="flex justify-between items-center mb-2 pb-1 border-b border-neutral-800">
+                                <span class="text-xs font-bold text-neutral-400 tracking-wide">Saved accounts</span>
+                                <button type="button" onclick="closeSuggestions()" class="text-neutral-400 hover:text-white transition">
+                                    <i class="fa-solid fa-xmark text-sm"></i>
+                                </button>
+                            </div>
+                            <div id="suggestions-list" class="space-y-1 max-h-32 overflow-y-auto">
+                                </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Password</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="login-password" required placeholder="Enter password" class="w-full pl-11 pr-4 py-3.5 rounded-xl auth-input focus:outline-none transition font-medium shadow-sm">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full vibrant-coral-bg text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-500/20 transition duration-200 mt-2 text-base flex items-center justify-center gap-2">
+                        Login <i class="fa-solid fa-arrow-right text-sm"></i>
+                    </button>
+                </form>
+                
+                <div class="relative flex py-5 items-center my-2">
+                    <div class="flex-grow border-t border-gray-100"></div>
+                    <span class="flex-shrink mx-4 text-xs font-bold tracking-widest text-gray-300 uppercase">OR</span>
+                    <div class="flex-grow border-t border-gray-100"></div>
+                </div>
+
+                <button onclick="handleGoogleOAuth()" class="w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-3 text-sm">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.53-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-8.72z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.11 0-5.74-2.11-6.68-4.96H1.21v3.15C3.18 21.88 7.31 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.32 14.24A7.16 7.16 0 0 1 5 12c0-.79.13-1.57.32-2.34V6.51H1.21A11.94 11.94 0 0 0 0 12c0 1.92.45 3.74 1.21 5.49l4.11-3.25z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.18 2.12 1.21 5.49l4.11 3.25c.94-2.85 3.57-4.96 6.68-4.96z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+
+                <p class="text-sm text-gray-500 mt-8 text-left font-medium">
+                    New here? <a href="#" onclick="switchAuthTab('register')" class="text-indigo-500 hover:underline font-bold">Create an account</a>
+                </p>
+            </div>
+
+            <div id="view-register" class="hidden">
+                <h1 class="serif-heading text-4xl text-gray-900 font-bold mb-2 tracking-tight">Create account</h1>
+                <p class="text-sm text-gray-500 mb-8 leading-relaxed">Register once, then your planner unlocks immediately.</p>
+                
+                <form id="register-form" onsubmit="handleRegisterSubmit(event)" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Name</label>
+                        <input type="text" id="reg-name" required placeholder="Your name" class="w-full px-4 py-3.5 rounded-xl auth-input focus:outline-none transition font-medium shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Email</label>
+                        <input type="email" id="reg-email" required placeholder="you@example.com" class="w-full px-4 py-3.5 rounded-xl auth-input focus:outline-none transition font-medium shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold tracking-wider text-gray-400 uppercase mb-2">Password</label>
+                        <input type="password" id="reg-pass" required minlength="6" placeholder="At least 6 characters" class="w-full px-4 py-3.5 rounded-xl auth-input focus:outline-none transition font-medium shadow-sm">
+                    </div>
+                    <button type="submit" class="w-full vibrant-coral-bg text-white font-bold py-4 rounded-2xl shadow-lg transition duration-200 mt-2 text-base">
+                        Register Account
+                    </button>
+                </form>
+                
+                <div class="relative flex py-5 items-center my-2">
+                    <div class="flex-grow border-t border-gray-100"></div>
+                    <span class="flex-shrink mx-4 text-xs font-bold tracking-widest text-gray-300 uppercase">OR</span>
+                    <div class="flex-grow border-t border-gray-100"></div>
+                </div>
+
+                <button onclick="handleGoogleOAuth()" class="w-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-3 text-sm">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.53-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-8.72z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.11 0-5.74-2.11-6.68-4.96H1.21v3.15C3.18 21.88 7.31 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.32 14.24A7.16 7.16 0 0 1 5 12c0-.79.13-1.57.32-2.34V6.51H1.21A11.94 11.94 0 0 0 0 12c0 1.92.45 3.74 1.21 5.49l4.11-3.25z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.18 2.12 1.21 5.49l4.11 3.25c.94-2.85 3.57-4.96 6.68-4.96z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+
+                <p class="text-sm text-gray-500 mt-8 text-left font-medium">
+                    Already registered? <a href="#" onclick="switchAuthTab('login')" class="text-indigo-500 hover:underline font-bold">Login instead</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden min-h-screen w-full flex flex-col">
+        <nav class="bg-white shadow-md sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="navigateTo('home')">
+                <span class="vibrant-coral-bg text-white p-2 rounded-xl text-xl"><i class="fa-solid fa-compass"></i></span>
+                <span class="text-2xl font-black text-gray-800 tracking-tight">Wander</span>
+            </div>
+            <div class="hidden md:flex space-x-8 font-semibold text-gray-600">
+                <button onclick="navigateTo('home-section')" class="hover:text-indigo-500 transition flex items-center gap-1"><i class="fa-solid fa-house text-sm"></i> Planner</button>
+                <button onclick="navigateTo('recommendations-section')" class="hover:text-indigo-500 transition flex items-center gap-1"><i class="fa-solid fa-star text-sm"></i> Recommendations</button>
+                <button onclick="navigateTo('tracker-section')" class="hover:text-indigo-500 transition flex items-center gap-1"><i class="fa-solid fa-wallet text-sm"></i> Expenses</button>
+                <button onclick="navigateTo('checklist-section')" class="hover:text-indigo-500 transition flex items-center gap-1"><i class="fa-solid fa-clipboard-list text-sm"></i> Checklist</button>
+            </div>
+            <button onclick="handleLogout()" class="border-2 border-gray-200 hover:border-red-400 px-4 py-2 rounded-xl text-sm font-bold text-gray-600 hover:text-red-500 transition">
+                Logout <i class="fa-solid fa-right-from-bracket ml-1"></i>
+            </button>
+        </nav>
+
+        <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8 space-y-12">
+            
+            <section id="home-section" class="bg-white rounded-3xl shadow-xl p-6 md:p-10 relative overflow-hidden">
+                <h2 class="text-3xl font-black text-gray-800 mb-2">Design Your Perfect Escape</h2>
+                <p class="text-gray-500 mb-8">Fill in your preferences, and let Wander curate recommendations instantly.</p>
+                
+                <form id="planner-form" onsubmit="generateTrip(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fa-solid fa-earth-americas text-indigo-500 mr-1"></i> Destination</label>
+                        <select id="form-destination" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium max-h-60 overflow-y-auto">
+                            </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fa-solid fa-indian-rupee-sign text-emerald-500 mr-1"></i> Total Budget (₹)</label>
+                        <input type="number" id="form-budget" required min="1000" value="25000" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fa-solid fa-calendar-days text-indigo-500 mr-1"></i> Trip Duration (Days)</label>
+                        <input type="number" id="form-days" required min="1" max="30" value="2" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2"><i class="fa-solid fa-users text-purple-500 mr-1"></i> Travelers</label>
+                        <input type="number" id="form-travelers" required min="1" value="2" class="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+                    </div>
+                    <div class="md:col-span-2 lg:col-span-4 mt-2">
+                        <button type="submit" class="w-full vibrant-coral-bg text-white font-bold py-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-lg">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Explore Top Places & Recommendations
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <section id="recommendations-section" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-md">
+                    <h2 class="text-3xl font-black text-gray-800 flex items-center gap-2">
+                        Top Recommendations for <span id="display-dest-name">Goa</span>
+                    </h2>
+                    <p class="text-gray-500 font-medium" id="display-trip-meta">2 Days • 2 Travelers • Budget: ₹25000</p>
+                </div>
+
+                <div id="main-view-container" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
+                            <div class="flex border-b border-gray-200 mb-6 font-semibold">
+                                <button id="tab-btn-restaurants" onclick="switchRecommendationTab('restaurants')" class="flex-1 pb-4 text-center text-indigo-600 border-b-2 border-indigo-600 transition-all duration-150">
+                                    <i class="fa-solid fa-utensils mr-1.5"></i> Restaurants
+                                </button>
+                                <button id="tab-btn-hotels" onclick="switchRecommendationTab('hotels')" class="flex-1 pb-4 text-center text-gray-400 hover:text-gray-600 border-b-2 border-transparent transition-all duration-150">
+                                    <i class="fa-solid fa-hotel mr-1.5"></i> Hotels
+                                </button>
+                                <button id="tab-btn-attractions" onclick="switchRecommendationTab('attractions')" class="flex-1 pb-4 text-center text-gray-400 hover:text-gray-600 border-b-2 border-transparent transition-all duration-150">
+                                    <i class="fa-solid fa-map-pin mr-1.5"></i> Attractions
+                                </button>
+                            </div>
+
+                            <div id="recommendation-cards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-8">
+                        <div id="tracker-section" class="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-wallet text-emerald-500"></i> Real-time Expense Tracker
+                            </h3>
+                            
+                            <div class="grid grid-cols-3 gap-2 text-center mb-6">
+                                <div class="bg-indigo-50 p-3 rounded-xl">
+                                    <span class="block text-xs font-bold text-indigo-600 uppercase">Budget</span>
+                                    <span class="text-sm md:text-base font-extrabold text-indigo-900" id="calc-budget">₹0</span>
+                                </div>
+                                <div class="bg-red-50 p-3 rounded-xl">
+                                    <span class="block text-xs font-bold text-red-600 uppercase">Spent</span>
+                                    <span class="text-sm md:text-base font-extrabold text-red-900" id="calc-spent">₹0</span>
+                                </div>
+                                <div class="bg-emerald-50 p-3 rounded-xl" id="remaining-box">
+                                    <span class="block text-xs font-bold text-emerald-600 uppercase">Balance</span>
+                                    <span class="text-sm md:text-base font-extrabold text-emerald-900" id="calc-remaining">₹0</span>
+                                </div>
+                            </div>
+
+                            <form id="expense-form" onsubmit="addExpense(event)" class="space-y-3 mb-4">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" id="expense-item" placeholder="Hotel, Food, etc." required class="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-sm focus:outline-none">
+                                    <input type="number" id="expense-amount" placeholder="Amount (₹)" required class="w-full p-2.5 bg-gray-50 rounded-lg border border-gray-200 text-sm focus:outline-none">
+                                </div>
+                                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-lg text-sm transition">
+                                    + Add Log Entry
+                                </button>
+                            </form>
+
+                            <div class="max-h-64 overflow-y-auto divide-y divide-gray-100 pr-1" id="expense-ledger"></div>
+                        </div>
+
+                        <div id="checklist-section" class="bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
+                            <h3 class="text-xl font-bold text-gray-800 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-check text-indigo-500"></i> Smart Pack List
+                            </h3>
+                            <p class="text-xs text-gray-400 mb-4">Add, toggle, or remove custom items dynamically.</p>
+                            
+                            <form id="checklist-form" onsubmit="addCustomChecklistItem(event)" class="flex gap-2 mb-4">
+                                <input type="text" id="custom-item-input" placeholder="Add custom item..." required class="w-full p-2 bg-gray-50 rounded-xl border border-gray-200 text-sm focus:outline-none">
+                                <button type="submit" class="vibrant-coral-bg text-white px-4 py-2 rounded-xl text-sm font-bold transition">Add</button>
+                            </form>
+
+                            <div id="checklist-category-header" class="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-2"></div>
+                            <div id="checklist-items" class="space-y-2 max-h-60 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="bg-gray-900 text-gray-400 py-6 text-center text-sm mt-auto">
+            <p>© 2026 Wander Travel Network. All rights reserved.</p>
+        </footer>
+    </div>
+
+
+    <div id="admin-container" class="hidden min-h-screen w-full flex flex-col app-bg">
+        <nav class="bg-slate-900 text-white shadow-xl sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="bg-indigo-600 text-white p-2 rounded-xl text-xl shadow-lg"><i class="fa-solid fa-user-shield"></i></span>
+                <div>
+                    <span class="text-xl font-black tracking-tight block leading-none">Wander Control</span>
+                    <span class="text-xs font-bold text-indigo-400 tracking-widest uppercase">Central Administrator</span>
+                </div>
+            </div>
+            
+            <div class="hidden lg:flex space-x-6 font-bold text-sm text-slate-300">
+                <button onclick="scrollToAdminSection('admin-dashboard-view')" class="hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-chart-pie"></i> Dashboard</button>
+                <button onclick="scrollToAdminSection('admin-users-view')" class="hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-users-gear"></i> Users</button>
+                <button onclick="scrollToAdminSection('admin-destinations-view')" class="hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-map"></i> Destinations</button>
+                <button onclick="scrollToAdminSection('admin-places-view')" class="hover:text-white transition flex items-center gap-1.5"><i class="fa-solid fa-location-dot"></i> Places</button>
+            </div>
+
+            <button onclick="handleLogout()" class="border border-slate-700 hover:border-red-500 bg-slate-800 hover:bg-red-950/40 px-4 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-red-400 transition flex items-center gap-1.5">
+                Admin Logout <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </nav>
+
+        <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8 space-y-10">
+            
+            <div id="admin-dashboard-view" class="space-y-6 scroll-mt-24">
+                <h3 class="text-2xl font-black text-slate-800"><i class="fa-solid fa-chart-simple text-indigo-600 mr-2"></i>Analytics & Dynamic Distribution Insights</h3>
+                
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <span class="text-xs font-bold tracking-wider uppercase text-slate-400">Total Users</span>
+                        <span id="stat-users" class="text-3xl font-black text-slate-800 mt-2">0</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <span class="text-xs font-bold tracking-wider uppercase text-slate-400">Destinations</span>
+                        <span id="stat-destinations" class="text-3xl font-black text-indigo-600 mt-2">0</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <span class="text-xs font-bold tracking-wider uppercase text-slate-400">Restaurants</span>
+                        <span id="stat-restaurants" class="text-3xl font-black text-emerald-600 mt-2">0</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <span class="text-xs font-bold tracking-wider uppercase text-slate-400">Hotels</span>
+                        <span id="stat-hotels" class="text-3xl font-black text-amber-600 mt-2">0</span>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+                        <span class="text-xs font-bold tracking-wider uppercase text-slate-400">Attractions</span>
+                        <span id="stat-attractions" class="text-3xl font-black text-purple-600 mt-2">0</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center">
+                        <h4 class="text-sm font-bold text-slate-700 tracking-wide mb-6 uppercase text-center w-full border-b pb-2 border-slate-100">
+                            Place Category Distribution
+                        </h4>
+                        <div class="flex flex-col sm:flex-row items-center justify-around w-full gap-4">
+                            <div class="relative w-40 h-40">
+                                <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="4"></circle>
+                                    <circle id="pie-slice-rest" cx="18" cy="18" r="15.915" fill="none" stroke="#10b981" stroke-width="4" stroke-dasharray="33 100" stroke-dashoffset="0"></circle>
+                                    <circle id="pie-slice-hotel" cx="18" cy="18" r="15.915" fill="none" stroke="#f59e0b" stroke-width="4" stroke-dasharray="33 100" stroke-dashoffset="-33"></circle>
+                                    <circle id="pie-slice-attr" cx="18" cy="18" r="15.915" fill="none" stroke="#a855f7" stroke-width="4" stroke-dasharray="34 100" stroke-dashoffset="-66"></circle>
+                                </svg>
+                            </div>
+                            <div class="space-y-2 text-xs font-semibold text-slate-600">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Restaurants (<span id="lbl-pc-rest">0%</span>)</div>
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span> Hotels (<span id="lbl-pc-hotel">0%</span>)</div>
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-purple-500 inline-block"></span> Attractions (<span id="lbl-pc-attr">0%</span>)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center">
+                        <h4 class="text-sm font-bold text-slate-700 tracking-wide mb-6 uppercase text-center w-full border-b pb-2 border-slate-100">
+                            Budget Tier Level Distribution
+                        </h4>
+                        <div class="flex flex-col sm:flex-row items-center justify-around w-full gap-4">
+                            <div class="relative w-40 h-40">
+                                <svg viewBox="0 0 36 36" class="w-full h-full transform -rotate-90">
+                                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#f1f5f9" stroke-width="4"></circle>
+                                    <circle id="pie-slice-low" cx="18" cy="18" r="15.915" fill="none" stroke="#3b82f6" stroke-width="4" stroke-dasharray="40 100" stroke-dashoffset="0"></circle>
+                                    <circle id="pie-slice-med" cx="18" cy="18" r="15.915" fill="none" stroke="#6366f1" stroke-width="4" stroke-dasharray="30 100" stroke-dashoffset="-40"></circle>
+                                    <circle id="pie-slice-high" cx="18" cy="18" r="15.915" fill="none" stroke="#ec4899" stroke-width="4" stroke-dasharray="30 100" stroke-dashoffset="-70"></circle>
+                                </svg>
+                            </div>
+                            <div class="space-y-2 text-xs font-semibold text-slate-600">
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500 inline-block"></span> Budget / Low (<span id="lbl-pb-low">0%</span>)</div>
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-indigo-500 inline-block"></span> Moderate / Medium (<span id="lbl-pb-med">0%</span>)</div>
+                                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-pink-500 inline-block"></span> Luxury / High (<span id="lbl-pb-high">0%</span>)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="admin-users-view" class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 scroll-mt-24">
+                <div class="flex justify-between items-center mb-4 border-b pb-3 border-slate-100">
+                    <h3 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-users text-indigo-500 mr-2"></i>Manage User Registrations</h3>
+                    <span class="text-xs bg-slate-100 text-slate-600 py-1 px-2.5 rounded-full font-bold" id="badge-users-count">0 Users Loaded</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600 border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 uppercase text-xs font-bold border-b border-slate-100">
+                                <th class="py-3 px-4">Profile Name</th>
+                                <th class="py-3 px-4">Email Address</th>
+                                <th class="py-3 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-table-rows" class="divide-y divide-slate-100 font-medium">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="admin-destinations-view" class="grid grid-cols-1 lg:grid-cols-3 gap-8 scroll-mt-24">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 h-fit">
+                    <h3 id="dest-form-title" class="text-lg font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                        <span><i class="fa-solid fa-folder-plus text-indigo-500 mr-2"></i>Add Destination</span>
+                        <button id="btn-cancel-dest-edit" onclick="resetDestinationForm()" class="hidden text-xs text-rose-500 font-bold hover:underline">Cancel Edit</button>
+                    </h3>
+                    <form id="admin-dest-form" onsubmit="handleSaveDestination(event)" class="space-y-4">
+                        <input type="hidden" id="edit-dest-id" value="">
+                        <input type="hidden" id="edit-dest-old-name" value="">
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">City Destination Name</label>
+                            <input type="text" id="admin-dest-name" required placeholder="e.g., Manali, Shimla, Gondal" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium">
+                        </div>
+                        <button type="submit" id="btn-submit-dest" class="w-full bg-slate-900 hover:bg-indigo-600 text-white text-sm font-bold py-3 rounded-xl transition">
+                            Save Destination Choice
+                        </button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100"><i class="fa-solid fa-list-check text-indigo-500 mr-2"></i>Configured Active Destinations Inventory</h3>
+                    <div id="admin-destinations-list-box" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1">
+                        </div>
+                </div>
+            </div>
+
+            <div id="admin-places-view" class="grid grid-cols-1 lg:grid-cols-3 gap-8 scroll-mt-24">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 h-fit">
+                    <h3 id="place-form-title" class="text-lg font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                        <span><i class="fa-solid fa-map-location text-indigo-500 mr-2"></i>Add Recommendation Place</span>
+                        <button id="btn-cancel-place-edit" onclick="resetPlaceForm()" class="hidden text-xs text-rose-500 font-bold hover:underline">Cancel Edit</button>
+                    </h3>
+                    <form id="admin-place-form" onsubmit="handleSavePlace(event)" class="space-y-4">
+                        <input type="hidden" id="edit-place-id" value="">
+                        
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Target Destination</label>
+                            <select id="admin-place-dest-select" required class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Category Type</label>
+                                <select id="admin-place-category" required class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="restaurants">Restaurant</option>
+                                    <option value="hotels">Hotel</option>
+                                    <option value="attractions">Attraction</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Budget Class</label>
+                                <select id="admin-place-budget-tier" required class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="Low">Budget (Low)</option>
+                                    <option value="Medium">Moderate (Med)</option>
+                                    <option value="High">Luxury (High)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Place & Business Name</label>
+                            <input type="text" id="admin-place-name" required placeholder="e.g., Grand Palace Hotel" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Rating Score (1.0-5.0)</label>
+                                <input type="number" id="admin-place-rating" step="0.1" min="1.0" max="5.0" value="4.5" required class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Image Media Link</label>
+                                <input type="url" id="admin-place-image" placeholder="https://..." class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Google Maps Link</label>
+                            <input type="url" id="admin-place-maps-link" placeholder="https://maps.google.com/..." class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Detailed Narrative Description</label>
+                            <textarea id="admin-place-desc" required rows="3" placeholder="Describe ambiance, key features, signature items..." class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none resize-none"></textarea>
+                        </div>
+
+                        <button type="submit" id="btn-submit-place" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm py-3 rounded-xl shadow transition">
+                            Commit Place Recommendation
+                        </button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4 border-b pb-3 border-slate-100">
+                        <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-map-marked-alt text-indigo-500 mr-2"></i>Active Place Recommendations Ledger</h3>
+                        <select id="admin-places-filter-dest" onchange="refreshAdminPlacesTable()" class="bg-slate-100 text-slate-700 font-bold text-xs p-2 rounded-xl border-none focus:ring-2 focus:ring-indigo-500">
+                            </select>
+                    </div>
+
+                    <div class="overflow-x-auto flex-grow max-h-[500px] overflow-y-auto">
+                        <table class="w-full text-left text-xs text-slate-600 border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-100 sticky top-0 z-10">
+                                    <th class="py-2.5 px-3">Name & Cat</th>
+                                    <th class="py-2.5 px-3">Destination</th>
+                                    <th class="py-2.5 px-3">Tier</th>
+                                    <th class="py-2.5 px-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-places-table-rows" class="divide-y divide-slate-100 font-medium">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+        
+        <footer class="bg-slate-900 text-slate-500 py-4 text-center text-xs mt-auto border-t border-slate-800">
+            <p>© 2026 Wander Admin Terminal Console Grid System.</p>
+        </footer>
+    </div>
+
+
+    <script>
+const emailInputNode = document.getElementById('login-email');
+const passwordInputNode = document.getElementById('login-password');
+const dropdownContainer = document.getElementById('email-suggestions');
+const listContainer = document.getElementById('suggestions-list');
+
+let sessionData = { targetBudget: 0, aggregateSpent: 0 };
+let dynamicChecklistArray = [];
+let liveExpensesArray = [];
+let activeSelectedDestinationId = null;
+let activeSelectedLocation = "Goa";
+let activeCurrentTab = "restaurants";
+let destinations = [];
+let appUsers = [];
+let appPlaces = [];
+let recommendationsList = [];
+let currentUser = null;
+
+window.addEventListener('DOMContentLoaded', async () => {
+    emailInputNode.addEventListener('focus', openSuggestions);
+    document.addEventListener('click', function(event) {
+        if (!emailInputNode.contains(event.target) && !dropdownContainer.contains(event.target)) {
+            closeSuggestions();
+        }
+    });
+
+    await initApp();
+});
+
+async function initApp() {
+    await loadSession();
+    await loadDestinations();
+    if (currentUser && currentUser.is_admin) {
+        await initAdminPortalSync();
+    }
+}
+
+function openSuggestions() {
+    listContainer.innerHTML = "";
+
+    const adminRow = document.createElement('div');
+    adminRow.className = "py-2 px-3 text-sm text-amber-400 hover:bg-neutral-800 font-bold rounded-lg cursor-pointer transition truncate border-b border-neutral-800 flex justify-between";
+    adminRow.innerHTML = "<span>System Admin</span><span class='text-xs text-neutral-500 font-normal'>admin / admin123</span>";
+    adminRow.addEventListener('click', () => {
+        emailInputNode.value = "admin";
+        passwordInputNode.value = "admin123";
+        closeSuggestions();
+    });
+    listContainer.appendChild(adminRow);
+    dropdownContainer.classList.remove('hidden');
+}
+
+function closeSuggestions() {
+    dropdownContainer.classList.add('hidden');
+}
+
+function clearAlerts() {
+    document.getElementById('logout-alert').classList.add('hidden');
+    document.getElementById('reg-success-alert').classList.add('hidden');
+    document.getElementById('error-alert').classList.add('hidden');
+}
+
+function switchAuthTab(mode) {
+    const loginTab = document.getElementById('tab-login');
+    const registerTab = document.getElementById('tab-register');
+    const loginView = document.getElementById('view-login');
+    const registerView = document.getElementById('view-register');
+
+    clearAlerts();
+    closeSuggestions();
+
+    if(mode === 'login') {
+        loginTab.className = "w-1/2 py-2.5 text-center font-bold text-sm rounded-xl transition duration-200 bg-white text-gray-950 shadow-sm";
+        registerTab.className = "w-1/2 py-2.5 text-center font-bold text-sm rounded-xl transition duration-200 text-gray-400 hover:text-gray-700";
+        loginView.classList.remove('hidden');
+        registerView.classList.add('hidden');
+    } else {
+        registerTab.className = "w-1/2 py-2.5 text-center font-bold text-sm rounded-xl transition duration-200 bg-white text-gray-950 shadow-sm";
+        loginTab.className = "w-1/2 py-2.5 text-center font-bold text-sm rounded-xl transition duration-200 text-gray-400 hover:text-gray-700";
+        registerView.classList.remove('hidden');
+        loginView.classList.add('hidden');
+    }
+}
+
+async function handleRegisterSubmit(e) {
+    e.preventDefault();
+    clearAlerts();
+    const name = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim().toLowerCase();
+    const password = document.getElementById('reg-pass').value;
+
+    if (email === 'admin') {
+        alert("Username reserved for core infrastructure protection.");
+        return;
+    }
+
+    const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+    });
+
+    if (response.ok) {
+        document.getElementById('register-form').reset();
+        switchAuthTab('login');
+        document.getElementById('reg-success-alert').classList.remove('hidden');
+        await loadDestinations();
+    } else {
+        const payload = await response.json();
+        alert(payload.error || 'Registration failed.');
+    }
+}
+
+async function handleLoginSubmit(e) {
+    e.preventDefault();
+    clearAlerts();
+    const userInput = emailInputNode.value.trim();
+    const passInput = passwordInputNode.value;
+
+    const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userInput, password: passInput }),
+    });
+
+    if (!response.ok) {
+        document.getElementById('error-alert').classList.remove('hidden');
+        return;
+    }
+
+    const payload = await response.json();
+    currentUser = payload.user;
+    document.getElementById('login-form').reset();
+    await loadDestinations();
+
+    if (currentUser.is_admin) {
+        showAdminView();
+        await initAdminPortalSync();
+    } else {
+        showAppView();
+    }
+}
+
+function handleGoogleOAuth() {
+    clearAlerts();
+    alert("Google OAuth profile extraction simulation bypass triggered.");
+}
+
+async function handleLogout() {
+    await fetch('/api/logout', { method: 'POST' });
+    currentUser = null;
+    document.getElementById('body-canvas').className = "gradient-bg min-h-screen font-sans flex items-center justify-center";
+    document.getElementById('app-container').classList.add('hidden');
+    document.getElementById('admin-container').classList.add('hidden');
+    document.getElementById('auth-page').classList.remove('hidden');
+    document.getElementById('recommendations-section').classList.add('hidden');
+    switchAuthTab('login');
+    document.getElementById('logout-alert').classList.remove('hidden');
+}
+
+function showAdminView() {
+    document.getElementById('body-canvas').className = "app-bg min-h-screen font-sans flex flex-col justify-start";
+    document.getElementById('auth-page').classList.add('hidden');
+    document.getElementById('admin-container').classList.remove('hidden');
+    document.getElementById('app-container').classList.add('hidden');
+    document.getElementById('recommendations-section').classList.add('hidden');
+}
+
+function showAppView() {
+    document.getElementById('body-canvas').className = "app-bg min-h-screen font-sans flex flex-col justify-start";
+    document.getElementById('auth-page').classList.add('hidden');
+    document.getElementById('admin-container').classList.add('hidden');
+    document.getElementById('app-container').classList.remove('hidden');
+    document.getElementById('recommendations-section').classList.add('hidden');
+}
+
+function navigateTo(targetId) {
+    const el = document.getElementById(targetId);
+    if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function loadSession() {
+    const response = await fetch('/api/session');
+    if (!response.ok) return;
+    const payload = await response.json();
+    currentUser = payload.user;
+    if (currentUser) {
+        if (currentUser.is_admin) {
+            showAdminView();
+            await initAdminPortalSync();
+        } else {
+            showAppView();
+        }
+    }
+}
+
+async function loadDestinations() {
+    const response = await fetch('/api/destinations');
+    if (!response.ok) return;
+    const payload = await response.json();
+    destinations = payload.destinations || [];
+    populateUserDropdownDestinations();
+    if (!activeSelectedDestinationId && destinations.length) {
+        activeSelectedDestinationId = destinations[0].id;
+        activeSelectedLocation = destinations[0].destination_name;
+    }
+}
+
+function populateUserDropdownDestinations() {
+    const destSelectNode = document.getElementById('form-destination');
+    destSelectNode.innerHTML = "";
+    destinations.sort((a, b) => a.destination_name.localeCompare(b.destination_name)).forEach(dest => {
+        const opt = document.createElement('option');
+        opt.value = dest.id;
+        opt.innerText = dest.destination_name;
+        destSelectNode.appendChild(opt);
+    });
+}
+
+async function generateTrip(e) {
+    e.preventDefault();
+    activeSelectedDestinationId = document.getElementById('form-destination').value;
+    const selected = destinations.find(dest => dest.id.toString() === activeSelectedDestinationId.toString());
+    activeSelectedLocation = selected ? selected.destination_name : activeSelectedLocation;
+    const inputBudget = parseInt(document.getElementById('form-budget').value, 10);
+    const inputDays = parseInt(document.getElementById('form-days').value, 10);
+    const inputTravelers = parseInt(document.getElementById('form-travelers').value, 10);
+
+    document.getElementById('display-dest-name').innerText = activeSelectedLocation;
+    document.getElementById('display-trip-meta').innerText = `${inputDays} Days • ${inputTravelers} Travelers • Budget Cap: ₹${inputBudget}`;
+
+    seedDefaultTrackerData(inputBudget);
+    await saveExploreHistory(inputBudget, inputDays, inputTravelers);
+    await loadRecommendations();
+
+    const baseChecklist = ["Travel Bag Pack", "Identity Verification Cards", "Universal Charger Adapter", "First-Aid Medicine Kit", "Comfortable Clothes"];
+    dynamicChecklistArray = baseChecklist.map(item => ({ text: item, done: false }));
+    document.getElementById('checklist-category-header').innerHTML = `<i class="fa-solid fa-tags text-indigo-500"></i> Essentials Checklist`;
+    refreshChecklistDOM();
+
+    document.getElementById('recommendations-section').classList.remove('hidden');
+    navigateTo('recommendations-section');
+}
+
+async function saveExploreHistory(budget, days, travelers) {
+    if (!currentUser) return;
+    await fetch('/api/explore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destination_id: activeSelectedDestinationId, budget, days, travelers }),
+    });
+}
+
+async function switchRecommendationTab(tabName) {
+    activeCurrentTab = tabName;
+    const tabs = ['restaurants', 'hotels', 'attractions'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        btn.className = t === tabName ? "flex-1 pb-4 text-center text-indigo-600 border-b-2 border-indigo-600 transition-all duration-150" : "flex-1 pb-4 text-center text-gray-400 hover:text-gray-600 border-b-2 border-transparent transition-all duration-150";
+    });
+    await loadRecommendations();
+}
+
+async function loadRecommendations() {
+    if (!activeSelectedDestinationId) return;
+    const response = await fetch(`/api/recommendations?destination_id=${encodeURIComponent(activeSelectedDestinationId)}&category=${encodeURIComponent(activeCurrentTab)}`);
+    if (!response.ok) {
+        recommendationsList = [];
+        renderRecommendationCards();
+        return;
+    }
+    const payload = await response.json();
+    recommendationsList = payload.recommendations || [];
+    renderRecommendationCards();
+}
+
+function renderRecommendationCards() {
+    const gridContainer = document.getElementById('recommendation-cards-grid');
+    gridContainer.innerHTML = "";
+    let activeItemsList = recommendationsList;
+    if (activeItemsList.length === 0) {
+        activeItemsList = [
+            { name: `Signature Culinary Hub of ${activeSelectedLocation}`, desc: `Acclaimed top-rated premier destination spot native to ${activeSelectedLocation}.`, rating: "4.8", img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80", mapsLink: "" },
+            { name: "Traditional Junction Grill", desc: "Scenic town hub delivering unmatched hospitality, hot beverages, and fresh daily organic specialties.", rating: "4.5", img: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=600&q=80", mapsLink: "" },
+            { name: "The Heritage Spice Garden", desc: "A charming boutique open-air garden space serving exquisite gourmet adaptations of traditional food.", rating: "4.6", img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80", mapsLink: "" },
+            { name: "Classic Travelers Spot", desc: "Relaxed urban space known for locally sourced specialty menus, freshly baked treats, and vibrant music.", rating: "4.4", img: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=600&q=80", mapsLink: "" }
+        ];
+    }
+
+    activeItemsList.slice(0, 4).forEach(place => {
+        const mapsHref = place.mapsLink || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ', ' + activeSelectedLocation)}`;
+        const cardHTML = `
+            <div class="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm flex flex-col justify-between transition hover:shadow-md">
+                <div class="h-44 overflow-hidden relative">
+                    <img src="${place.img || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80'}" class="w-full h-full object-cover">
+                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm py-1 px-2.5 rounded-lg text-xs font-bold text-gray-800 shadow flex items-center gap-1">
+                        <i class="fa-solid fa-star text-amber-500"></i> ${place.rating}
+                    </div>
+                </div>
+                <div class="p-5 flex flex-col flex-grow justify-between">
+                    <div class="mb-4">
+                        <h4 class="font-bold text-gray-800 text-lg mb-1">${place.name}</h4>
+                        <p class="text-sm text-gray-500 leading-relaxed font-medium">${place.desc}</p>
+                        ${place.budgetTier ? `<span class="inline-block mt-2 text-[10px] bg-slate-200 text-slate-800 px-2 py-0.5 font-bold uppercase rounded tracking-wide">${place.budgetTier} Class</span>` : ''}
+                    </div>
+                    <a href="${mapsHref}" target="_blank" rel="noopener noreferrer" class="w-full border border-indigo-500 text-indigo-600 hover:bg-indigo-50 font-bold py-2.5 px-4 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-map-location-dot"></i> View on Google Maps
+                    </a>
+                </div>
+            </div>`;
+        gridContainer.innerHTML += cardHTML;
+    });
+}
+
+function seedDefaultTrackerData(budgetAmt) {
+    sessionData.targetBudget = budgetAmt;
+    liveExpensesArray = [
+        { label: "Hotel Accommodation", amount: 5000 },
+        { label: "Food & Dining", amount: 3000 },
+        { label: "Local Transport", amount: 2000 }
+    ];
+    refreshExpenseLedgerDOM();
+}
+
+function refreshExpenseLedgerDOM() {
+    const ledgerContainer = document.getElementById('expense-ledger');
+    ledgerContainer.innerHTML = "";
+    sessionData.aggregateSpent = 0;
+    liveExpensesArray.forEach((item, index) => {
+        sessionData.aggregateSpent += item.amount;
+        ledgerContainer.innerHTML += `
+            <div class="flex justify-between items-center py-2.5 px-1">
+                <span class="text-sm font-medium text-gray-700">${item.label}</span>
+                <div class="flex items-center gap-1">
+                    <span class="text-gray-400 text-sm">₹</span>
+                    <input type="number" value="${item.amount}" onchange="updateExpenseAmount(${index}, this.value)" class="w-20 p-1 text-right font-mono font-bold text-gray-900 bg-gray-50 border rounded-lg text-sm">
+                    <button onclick="deleteExpenseItem(${index})" class="text-gray-300 hover:text-red-500 pl-2"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                </div>
+            </div>`;
+    });
+    refreshFinancialBalances();
+}
+
+function addExpense(e) {
+    e.preventDefault();
+    const itemInput = document.getElementById('expense-item');
+    const amtInput = document.getElementById('expense-amount');
+    const labelText = itemInput.value.trim();
+    const amtValue = parseInt(amtInput.value, 10);
+    if (!labelText || isNaN(amtValue) || amtValue <= 0) return;
+    const matchingIndex = liveExpensesArray.findIndex(exp => exp.label.toLowerCase() === labelText.toLowerCase());
+    if(matchingIndex !== -1) {
+        liveExpensesArray[matchingIndex].amount += amtValue;
+    } else {
+        liveExpensesArray.push({ label: labelText, amount: amtValue });
+    }
+    itemInput.value = "";
+    amtInput.value = "";
+    refreshExpenseLedgerDOM();
+}
+
+function updateExpenseAmount(index, newValue) {
+    const parsedValue = parseInt(newValue, 10);
+    liveExpensesArray[index].amount = isNaN(parsedValue) || parsedValue < 0 ? 0 : parsedValue;
+    refreshExpenseLedgerDOM();
+}
+
+function deleteExpenseItem(index) {
+    liveExpensesArray.splice(index, 1);
+    refreshExpenseLedgerDOM();
+}
+
+function refreshFinancialBalances() {
+    const rem = sessionData.targetBudget - sessionData.aggregateSpent;
+    document.getElementById('calc-budget').innerText = `₹${sessionData.targetBudget}`;
+    document.getElementById('calc-spent').innerText = `₹${sessionData.aggregateSpent}`;
+    document.getElementById('calc-remaining').innerText = `₹${rem}`;
+    document.getElementById('remaining-box').className = rem < 0 ? "bg-red-100 p-3 rounded-xl" : "bg-emerald-50 p-3 rounded-xl";
+}
+
+function refreshChecklistDOM() {
+    const parent = document.getElementById('checklist-items');
+    parent.innerHTML = "";
+    if(dynamicChecklistArray.length === 0) {
+        parent.innerHTML = `<p class="text-xs text-gray-400 italic py-2">Pack list empty.</p>`;
+        return;
+    }
+    dynamicChecklistArray.forEach((item, index) => {
+        parent.innerHTML += `
+            <div class="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-100">
+                <label class="flex items-center space-x-3 cursor-pointer flex-grow">
+                    <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleChecklistItem(${index})" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-sm font-medium ${item.done ? 'line-through text-gray-400' : 'text-gray-700'}">${item.text}</span>
+                </label>
+                <button onclick="deleteChecklistItem(${index})" class="text-gray-300 hover:text-red-500 px-2"><i class="fa-solid fa-trash-can text-xs"></i></button>
+            </div>`;
+    });
+}
+
+function addCustomChecklistItem(e) {
+    e.preventDefault();
+    const inputNode = document.getElementById('custom-item-input');
+    if(!inputNode.value.trim()) return;
+    dynamicChecklistArray.push({ text: inputNode.value.trim(), done: false });
+    inputNode.value = "";
+    refreshChecklistDOM();
+}
+
+function toggleChecklistItem(index) {
+    dynamicChecklistArray[index].done = !dynamicChecklistArray[index].done;
+    refreshChecklistDOM();
+}
+
+function deleteChecklistItem(index) {
+    dynamicChecklistArray.splice(index, 1);
+    refreshChecklistDOM();
+}
+
+async function initAdminPortalSync() {
+    if (!currentUser || !currentUser.is_admin) return;
+    await Promise.all([loadAdminUsers(), loadAdminDestinations(), loadAdminPlaces()]);
+}
+
+async function loadAdminUsers() {
+    const response = await fetch('/api/admin/users');
+    if (!response.ok) return;
+    const payload = await response.json();
+    appUsers = payload.users || [];
+    refreshAdminUsersTable();
+    refreshAdminStatsCounters();
+}
+
+async function loadAdminDestinations() {
+    const response = await fetch('/api/admin/destinations');
+    if (!response.ok) return;
+    const payload = await response.json();
+    destinations = payload.destinations || [];
+    populateUserDropdownDestinations();
+    if (!activeSelectedDestinationId && destinations.length) {
+        activeSelectedDestinationId = destinations[0].id;
+        activeSelectedLocation = destinations[0].destination_name;
+    }
+    populateAdminFormSelects();
+    refreshAdminDestinationsGrid();
+    refreshAdminStatsCounters();
+}
+
+async function loadAdminPlaces() {
+    const response = await fetch('/api/admin/places');
+    if (!response.ok) return;
+    const payload = await response.json();
+    appPlaces = payload.places || [];
+    refreshAdminPlacesTable();
+    refreshAdminStatsCounters();
+    refreshAdminPieCharts();
+}
+
+function refreshAdminStatsCounters() {
+    document.getElementById('stat-users').innerText = appUsers.length;
+    document.getElementById('badge-users-count').innerText = `${appUsers.length} Users Registered`;
+    document.getElementById('stat-destinations').innerText = destinations.length;
+    const countCat = cat => appPlaces.filter(p => p.category === cat).length;
+    document.getElementById('stat-restaurants').innerText = countCat('restaurants');
+    document.getElementById('stat-hotels').innerText = countCat('hotels');
+    document.getElementById('stat-attractions').innerText = countCat('attractions');
+}
+
+function refreshAdminPieCharts() {
+    const totalPlaces = appPlaces.length || 1;
+    const nRest = appPlaces.filter(p => p.category === 'restaurants').length;
+    const nHotel = appPlaces.filter(p => p.category === 'hotels').length;
+    const nAttr = appPlaces.filter(p => p.category === 'attractions').length;
+    const pctRest = Math.round((nRest / totalPlaces) * 100);
+    const pctHotel = Math.round((nHotel / totalPlaces) * 100);
+    const pctAttr = 100 - (pctRest + pctHotel);
+    document.getElementById('lbl-pc-rest').innerText = `${pctRest}%`;
+    document.getElementById('lbl-pc-hotel').innerText = `${pctHotel}%`;
+    document.getElementById('lbl-pc-attr').innerText = `${pctAttr}%`;
+    document.getElementById('pie-slice-rest').setAttribute('stroke-dasharray', `${pctRest} 100`);
+    document.getElementById('pie-slice-hotel').setAttribute('stroke-dasharray', `${pctHotel} 100`);
+    document.getElementById('pie-slice-hotel').setAttribute('stroke-dashoffset', `-${pctRest}`);
+    document.getElementById('pie-slice-attr').setAttribute('stroke-dasharray', `${pctAttr} 100`);
+    document.getElementById('pie-slice-attr').setAttribute('stroke-dashoffset', `-${pctRest + pctHotel}`);
+    const nLow = appPlaces.filter(p => p.budget_tier === 'Low').length;
+    const nMed = appPlaces.filter(p => p.budget_tier === 'Medium').length;
+    const nHigh = appPlaces.filter(p => p.budget_tier === 'High').length;
+    const pctLow = Math.round((nLow / totalPlaces) * 100);
+    const pctMed = Math.round((nMed / totalPlaces) * 100);
+    const pctHigh = 100 - (pctLow + pctMed);
+    document.getElementById('lbl-pb-low').innerText = `${pctLow}%`;
+    document.getElementById('lbl-pb-med').innerText = `${pctMed}%`;
+    document.getElementById('lbl-pb-high').innerText = `${pctHigh}%`;
+    document.getElementById('pie-slice-low').setAttribute('stroke-dasharray', `${pctLow} 100`);
+    document.getElementById('pie-slice-med').setAttribute('stroke-dasharray', `${pctMed} 100`);
+    document.getElementById('pie-slice-med').setAttribute('stroke-dashoffset', `-${pctLow}`);
+    document.getElementById('pie-slice-high').setAttribute('stroke-dasharray', `${pctHigh} 100`);
+    document.getElementById('pie-slice-high').setAttribute('stroke-dashoffset', `-${pctLow + pctMed}`);
+}
+
+function refreshAdminUsersTable() {
+    const tableBody = document.getElementById('admin-users-table-rows');
+    tableBody.innerHTML = "";
+    if(appUsers.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="3" class="py-4 text-center text-slate-400 italic">No user accounts found.</td></tr>`;
+        return;
+    }
+    appUsers.forEach((user, index) => {
+        tableBody.innerHTML += `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="py-3 px-4 text-slate-900 font-bold">${user.name}</td>
+                <td class="py-3 px-4 font-mono text-slate-500 text-xs">${user.email}</td>
+                <td class="py-3 px-4 text-right">
+                    <button onclick="deleteUserRecord(${index})" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-1.5 rounded-lg text-xs transition">
+                        <i class="fa-solid fa-user-minus"></i> Delete
+                    </button>
+                </td>
+            </tr>`;
+    });
+}
+
+function deleteUserRecord(index) {
+    if(confirm(`Are you sure you want to delete profile: ${appUsers[index].name}?`)) {
+        appUsers.splice(index, 1);
+        refreshAdminUsersTable();
+        refreshAdminStatsCounters();
+    }
+}
+
+function refreshAdminDestinationsGrid() {
+    const box = document.getElementById('admin-destinations-list-box');
+    box.innerHTML = "";
+    destinations.sort((a, b) => a.destination_name.localeCompare(b.destination_name)).forEach(dest => {
+        box.innerHTML += `
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-between group shadow-sm">
+                <span class="font-bold text-slate-700 text-sm truncate mr-1">${dest.destination_name}</span>
+                <div class="flex items-center gap-1 opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onclick="setupEditDestination(${dest.id})" class="text-indigo-600 hover:text-indigo-800 bg-white shadow-xs p-1 rounded"><i class="fa-solid fa-pen text-xs"></i></button>
+                    <button onclick="deleteDestinationChoice(${dest.id})" class="text-red-500 hover:text-red-700 bg-white shadow-xs p-1 rounded"><i class="fa-solid fa-trash text-xs"></i></button>
+                </div>
+            </div>`;
+    });
+}
+
+async function handleSaveDestination(e) {
+    e.preventDefault();
+    const inputVal = document.getElementById('admin-dest-name').value.trim();
+    const destId = document.getElementById('edit-dest-id').value;
+    if(!inputVal) return;
+    const payload = { destination_name: inputVal };
+    const endpoint = destId ? `/api/admin/destinations/${destId}` : '/api/admin/destinations';
+    const method = destId ? 'PUT' : 'POST';
+    const response = await fetch(endpoint, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!response.ok) {
+        const err = await response.json();
+        alert(err.error || 'Unable to save destination.');
+        return;
+    }
+    resetDestinationForm();
+    await loadAdminDestinations();
+    await loadDestinations();
+}
+
+function setupEditDestination(id) {
+    const destination = destinations.find(d => d.id === id);
+    if(!destination) return;
+    document.getElementById('dest-form-title').children[0].innerText = "Edit Destination";
+    document.getElementById('btn-cancel-dest-edit').classList.remove('hidden');
+    document.getElementById('admin-dest-name').value = destination.destination_name;
+    document.getElementById('edit-dest-id').value = destination.id;
+    document.getElementById('btn-submit-dest').innerText = "Update Name Mapping";
+    scrollToAdminSection('admin-destinations-view');
+}
+
+function resetDestinationForm() {
+    document.getElementById('dest-form-title').children[0].innerText = "Add Destination";
+    document.getElementById('btn-cancel-dest-edit').classList.add('hidden');
+    document.getElementById('admin-dest-form').reset();
+    document.getElementById('edit-dest-id').value = "";
+    document.getElementById('btn-submit-dest').innerText = "Save Destination Choice";
+}
+
+async function deleteDestinationChoice(id) {
+    if(confirm(`Remove selected destination and its associated recommendations?`)) {
+        const response = await fetch(`/api/admin/destinations/${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+            const err = await response.json();
+            alert(err.error || 'Unable to delete destination.');
+            return;
+        }
+        await loadAdminDestinations();
+        await loadDestinations();
+    }
+}
+
+function populateAdminFormSelects() {
+    const destSelectForm = document.getElementById('admin-place-dest-select');
+    const destFilterSelect = document.getElementById('admin-places-filter-dest');
+    const activeFilterSavedValue = destFilterSelect.value || "ALL";
+    destSelectForm.innerHTML = "";
+    destFilterSelect.innerHTML = `<option value="ALL">All Recorded Destinations</option>`;
+    destinations.sort((a, b) => a.destination_name.localeCompare(b.destination_name)).forEach(dest => {
+        destSelectForm.innerHTML += `<option value="${dest.id}">${dest.destination_name}</option>`;
+        destFilterSelect.innerHTML += `<option value="${dest.id}">${dest.destination_name}</option>`;
+    });
+    if(destinations.some(d => d.id.toString() === activeFilterSavedValue) || activeFilterSavedValue === "ALL") {
+        destFilterSelect.value = activeFilterSavedValue;
+    }
+}
+
+function refreshAdminPlacesTable() {
+    const filterValue = document.getElementById('admin-places-filter-dest').value;
+    const rowsTarget = document.getElementById('admin-places-table-rows');
+    rowsTarget.innerHTML = "";
+    let scopeSet = appPlaces;
+    if(filterValue && filterValue !== "ALL") {
+        scopeSet = appPlaces.filter(p => p.destination_id.toString() === filterValue);
+    }
+    if(scopeSet.length === 0) {
+        rowsTarget.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-slate-400 italic">No recommendations configured matching search query.</td></tr>`;
+        return;
+    }
+    scopeSet.forEach(place => {
+        rowsTarget.innerHTML += `
+            <tr class="hover:bg-slate-50 transition">
+                <td class="py-2.5 px-3">
+                    <div class="font-bold text-slate-800 text-sm">${place.place_name}</div>
+                    <div class="text-[10px] uppercase font-bold text-indigo-500 tracking-wider">${place.category}</div>
+                </td>
+                <td class="py-2.5 px-3 text-slate-600 font-semibold text-xs">${place.destination_name}</td>
+                <td class="py-2.5 px-3">
+                    <span class="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-extrabold uppercase">${place.budget_tier}</span>
+                </td>
+                <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                    <button onclick="setupEditPlace(${place.id})" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 p-1.5 rounded-lg text-xs transition mr-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button onclick="deletePlaceRecord(${place.id})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-lg text-xs transition"><i class="fa-solid fa-trash-can"></i></button>
+                </td>
+            </tr>`;
+    });
+}
+
+async function handleSavePlace(e) {
+    e.preventDefault();
+    const pId = document.getElementById('edit-place-id').value;
+    const pDest = document.getElementById('admin-place-dest-select').value;
+    const pCat = document.getElementById('admin-place-category').value;
+    const pTier = document.getElementById('admin-place-budget-tier').value;
+    const pName = document.getElementById('admin-place-name').value.trim();
+    const pRating = document.getElementById('admin-place-rating').value;
+    const pImg = document.getElementById('admin-place-image').value.trim();
+    const pMaps = document.getElementById('admin-place-maps-link').value.trim();
+    const pDesc = document.getElementById('admin-place-desc').value.trim();
+    if(!pDest || !pCat || !pName || !pRating) return;
+    const payload = { destination_id: pDest, category: pCat, place_name: pName, description: pDesc, rating: pRating, budget_tier: pTier, image_url: pImg, google_maps_link: pMaps };
+    const endpoint = pId ? `/api/admin/places/${pId}` : '/api/admin/places';
+    const method = pId ? 'PUT' : 'POST';
+    const response = await fetch(endpoint, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!response.ok) {
+        const err = await response.json();
+        alert(err.error || 'Unable to save place.');
+        return;
+    }
+    resetPlaceForm();
+    await loadAdminPlaces();
+}
+
+function setupEditPlace(id) {
+    const match = appPlaces.find(p => p.id === id);
+    if(!match) return;
+    document.getElementById('place-form-title').children[0].innerText = "Edit Recommendation";
+    document.getElementById('btn-cancel-place-edit').classList.remove('hidden');
+    document.getElementById('edit-place-id').value = match.id;
+    document.getElementById('admin-place-dest-select').value = match.destination_id;
+    document.getElementById('admin-place-category').value = match.category;
+    document.getElementById('admin-place-budget-tier').value = match.budget_tier || "Medium";
+    document.getElementById('admin-place-name').value = match.place_name;
+    document.getElementById('admin-place-rating').value = match.rating;
+    document.getElementById('admin-place-image').value = match.image_url || "";
+    document.getElementById('admin-place-maps-link').value = match.google_maps_link || "";
+    document.getElementById('admin-place-desc').value = match.description;
+    document.getElementById('btn-submit-place').innerText = "Update Place Settings";
+    scrollToAdminSection('admin-places-view');
+}
+
+function resetPlaceForm() {
+    document.getElementById('place-form-title').children[0].innerText = "Add Recommendation Place";
+    document.getElementById('btn-cancel-place-edit').classList.add('hidden');
+    document.getElementById('admin-place-form').reset();
+    document.getElementById('edit-place-id').value = "";
+    document.getElementById('btn-submit-place').innerText = "Commit Place Recommendation";
+}
+
+async function deletePlaceRecord(id) {
+    if(confirm("Permanently erase selected catalog item recommendation?")) {
+        const response = await fetch(`/api/admin/places/${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+            const err = await response.json();
+            alert(err.error || 'Unable to delete place.');
+            return;
+        }
+        await loadAdminPlaces();
+    }
+}
+
+    </script>
+</body>
+</html>
